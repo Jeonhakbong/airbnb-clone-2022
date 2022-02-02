@@ -68,6 +68,7 @@ class Room(core_models.TimeStampedModel):
     instant_book = models.BooleanField(default=False)
 
     # Relationship
+    # users_models.User can also be "users.User"
     host = models.ForeignKey(users_models.User, on_delete=models.CASCADE)  # many to one
     room_type = models.ForeignKey(RoomType, null=True, on_delete=models.SET_NULL)
     amenities = models.ManyToManyField(Amenity, blank=True)  # many to many
