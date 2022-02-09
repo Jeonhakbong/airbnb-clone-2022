@@ -69,11 +69,17 @@ class Room(core_models.TimeStampedModel):
 
     # Relationship
     # users_models.User can also be "users.User"
-    host = models.ForeignKey(users_models.User, on_delete=models.CASCADE)  # many to one
-    room_type = models.ForeignKey(RoomType, null=True, on_delete=models.SET_NULL)
-    amenities = models.ManyToManyField(Amenity, blank=True)  # many to many
-    facilities = models.ManyToManyField(Facility, blank=True)
-    house_rules = models.ManyToManyField(HouseRule, blank=True)
+    host = models.ForeignKey(
+        users_models.User, related_name="rooms", on_delete=models.CASCADE
+    )  # many to one
+    room_type = models.ForeignKey(
+        RoomType, related_name="rooms", null=True, on_delete=models.SET_NULL
+    )
+    amenities = models.ManyToManyField(
+        Amenity, related_name="rooms", blank=True
+    )  # many to many
+    facilities = models.ManyToManyField(Facility, related_name="rooms", blank=True)
+    house_rules = models.ManyToManyField(HouseRule, related_name="rooms", blank=True)
 
     def __str__(self):
         return self.name
@@ -85,7 +91,7 @@ class Photo(core_models.TimeStampedModel):
 
     caption = models.CharField(max_length=80)
     file = models.ImageField()
-    room = models.ForeignKey(Room, on_delete=models.CASCADE)
+    room = models.ForeignKey(Room, related_name="photos", on_delete=models.CASCADE)
 
     def __str__(self):
         return self.caption
