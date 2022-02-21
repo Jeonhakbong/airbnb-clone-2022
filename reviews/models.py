@@ -25,3 +25,17 @@ class Review(core_models.TimeStampedModel):
 
     def __str__(self):
         return f"{self.review} - {self.room}"  # use __str__ better (self.room)
+
+    # function included everywhere, frontend, admin panel, etc.
+    # If you want the function is only on admin panel, let the function on admin.py
+    def rating_average(self):
+        avg = (
+            self.cleanliness
+            + self.accuracy
+            + self.communication
+            + self.location
+            + self.check_in
+            + self.value
+        ) / 6
+
+        return round(avg, 2)

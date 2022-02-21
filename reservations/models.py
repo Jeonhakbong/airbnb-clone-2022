@@ -1,5 +1,6 @@
 from optparse import check_builtin
 from django.db import models
+from django.utils import timezone  # django knows that our server is on Asia/Seoul
 from core import models as core_models
 
 # Create your models here.
@@ -35,3 +36,22 @@ class Reservation(core_models.TimeStampedModel):
 
     def __str__(self):
         return f"{self.room} - {self.check_in}"
+
+    def in_progress(self):
+        now = timezone.now().date()  # get date of now
+        if self.status == self.STATUS_CONFIRMED:
+            return now > self.check_in and now < self.check_out
+        else:
+            return False
+
+    in_progress.boolean = True  # can get boolean icon
+
+    def is_finished(self):
+        now = timezone.now().date()
+
+        if self.status == self.STATUS_CONFIRMED:
+            return now > self.check_out
+        else:
+            return False
+
+    is_finished.boolean = True

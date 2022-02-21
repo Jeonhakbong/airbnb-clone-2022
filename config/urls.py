@@ -15,7 +15,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from django.conf import settings  # set 'from root' clearly
+from django.conf.urls.static import static  # static() : help to serve static files
 
 urlpatterns = [
     path("admin/", admin.site.urls),
 ]
+
+if settings.DEBUG:  # Developement mode : serve files in my folder
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

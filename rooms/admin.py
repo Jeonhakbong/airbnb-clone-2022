@@ -12,6 +12,7 @@ class ItemAdmin(admin.ModelAdmin):
         "used_by",
     )
 
+    # use room_set(foreign key)
     def used_by(self, obj):
         return obj.rooms.count()
 
@@ -72,6 +73,7 @@ class RoomAdmin(admin.ModelAdmin):
         "instant_book",
         "count_amenities",
         "count_photos",
+        "total_rating",
     )
 
     list_filter = (
@@ -82,7 +84,7 @@ class RoomAdmin(admin.ModelAdmin):
     # we can access to foreign key's attributes
     search_fields = ["city", "host__username"]
 
-    # filter for many-to-many
+    # filter for many-to-many in FIeld Set
     filter_horizontal = (
         "amenities",
         "facilities",
