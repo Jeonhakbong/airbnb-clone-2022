@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.html import mark_safe
 from . import models
 
 # Register your models here.
@@ -12,15 +13,21 @@ class ItemAdmin(admin.ModelAdmin):
         "used_by",
     )
 
-    # use room_set(foreign key)
+    # use room_set(rooms, foreign key)
     def used_by(self, obj):
         return obj.rooms.count()
+
+
+class PhotoInline(admin.TabularInline):
+    model = models.Photo
 
 
 @admin.register(models.Room)
 class RoomAdmin(admin.ModelAdmin):
 
     """Room Admin Definition"""
+
+    inlines = (PhotoInline,)
 
     fieldsets = (
         (
@@ -81,8 +88,10 @@ class RoomAdmin(admin.ModelAdmin):
         "country",
     )
 
+    raw_id_fields = ("host",)
+
     # we can access to foreign key's attributes
-    search_fields = ["city", "host__username"]
+    search_fields = ["city", "^host__username"]
 
     # filter for many-to-many in FIeld Set
     filter_horizontal = (
@@ -106,4 +115,17 @@ class PhotoAdmin(admin.ModelAdmin):
 
     """Photo Admin Definition"""
 
-    pass
+    list_display = (
+        "__str__",
+        "get_thumbnail",
+    )
+
+    def get_thumbnail(self, obj):
+        # print(dir(obj.file)) # check it out
+
+        # f'<img src="{obj.file.url}" />'
+        # We can't use this html tag in django beacause of 'security'.
+        # We need to import mark_safe()
+        return mark_safe(f'<img width="50px" src="{obj.file.url}" />')
+
+    get_thumbnail.short_description = "Thumbnail"

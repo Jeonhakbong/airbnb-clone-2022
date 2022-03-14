@@ -1,3 +1,5 @@
+from ast import arg
+from curses import savetty
 from django.db import models
 from core import models as core_models
 from django_countries.fields import CountryField
@@ -80,6 +82,10 @@ class Room(core_models.TimeStampedModel):
     )  # many to many
     facilities = models.ManyToManyField(Facility, related_name="rooms", blank=True)
     house_rules = models.ManyToManyField(HouseRule, related_name="rooms", blank=True)
+
+    def save(self, *args, **kwargs):
+        self.city = str.capitalize(self.city)
+        super().save(*args, **kwargs)  # real save() method
 
     def __str__(self):
         return self.name
