@@ -145,4 +145,4 @@ AUTH_USER_MODEL = "users.User"
 # Set media file's url root
 MEDIA_ROOT = BASE_DIR / "uploads"  # or os.path.join(BASE_DIR, "uploads")
 
-MEDIA_URL = "/media/"  # absolute root
+MEDIA_URL = "/media/"  # absolute root form
