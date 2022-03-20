@@ -6,6 +6,14 @@ from django.http import HttpResponse
 # view need to return the response
 def all_rooms(request):
     # print(dir(request))  # we can check the request.
-    # now = datetime.now()
+    now = datetime.now()
+    hungry = True
     # HttpResponse(content=f"<h1>hello, It's {now}.")
-    return render(request, "hello.html")
+    return render(
+        request,
+        "hello.html",
+        context={
+            "now": now,
+            "hungry": hungry,
+        },
+    )
