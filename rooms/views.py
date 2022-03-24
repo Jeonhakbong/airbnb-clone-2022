@@ -6,7 +6,13 @@ from . import models
 
 # view need to return the response
 def all_rooms(request):
-    rooms = models.Room.objects.all()
+    # print(dir(request.GET))
+    # print(request.GET)  # we can get quety dict of the request. (convention like page.)
+    page = int(request.GET.get("page", 1))  # default is 1.
+    page_size = 10
+    limit = page_size * page
+    offset = limit - page_size
+    rooms = models.Room.objects.all()[offset:limit]
 
     return render(
         request,
