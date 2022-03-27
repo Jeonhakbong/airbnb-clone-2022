@@ -1,29 +1,26 @@
 import math
 from django.shortcuts import render  # allows us to send response with html inside.
+from django.core.paginator import Paginator
 from . import models
 
 # from django.http import HttpResponse
 
-
 # view need to return the response
 def all_rooms(request):
     # pagination.
-    page = int(request.GET.get("page", 1) or 1)
-    page_size = 10
+    page = request.GET.get("page")
+    room_list = models.Room.objects.all()  # just only create the queryset
+    # QuerySets are lazy – the act of creating a QuerySet doesn’t involve any database activity.
 
-    limit = page_size * page
-    offset = limit - page_size
-    rooms = models.Room.objects.all()[offset:limit]
+    paginator = Paginator(room_list, 10)
+    rooms = paginator.get_page(page)  # return page object
 
-    page_count = math.ceil(models.Room.objects.count() / page_size)
-
+    print(vars(rooms))  # get dictionary in current page.
+    print(vars(rooms.paginator))
     return render(
         request,
         "home/all_rooms.html",
         context={  # we can use it in html.
             "rooms": rooms,
-            "page": page,
-            "page_count": page_count,
-            "page_range": range(1, page_count + 1),
         },
     )
