@@ -20,7 +20,7 @@ from django.conf.urls.static import static  # static() : help to serve static fi
 
 
 # we don't want our urls.py file make bigger.
-# we need to divide and conquet it in each app. folder.
+# we need to 'divide and conquer' it in each app. folder.
 urlpatterns = [
     path("", include("core.urls", namespace="core")),
     path("admin/", admin.site.urls),

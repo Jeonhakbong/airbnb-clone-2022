@@ -1,9 +1,9 @@
 from django.urls import path
 from rooms import views as room_views
 
-app_name = "core"
+app_name = "core"  # we can find core urls by using 'namespace' in config urls.
 
-# urls of home, login, logout and so on.
+# urls for home, login, logout and so on.
 urlpatterns = [
-    path("", room_views.all_rooms, name="home"),
+    path("", room_views.all_rooms, name="home"),  # home.
 ]
