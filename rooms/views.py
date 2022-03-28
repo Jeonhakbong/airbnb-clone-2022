@@ -1,4 +1,3 @@
-import math
 from django.shortcuts import render  # allows us to send response with html inside.
 from django.core.paginator import Paginator
 from . import models
@@ -9,18 +8,19 @@ from . import models
 def all_rooms(request):
     # pagination.
     page = request.GET.get("page")
-    room_list = models.Room.objects.all()  # just only create the queryset
+    room_list = models.Room.objects.all()  # just only create the queryset.
     # QuerySets are lazy – the act of creating a QuerySet doesn’t involve any database activity.
 
-    paginator = Paginator(room_list, 10)
-    rooms = paginator.get_page(page)  # return page object
+    paginator = Paginator(room_list, per_page=10, orphans=3)
 
-    print(vars(rooms))  # get dictionary in current page.
-    print(vars(rooms.paginator))
+    page = paginator.get_page(page)  # return page object.
+
+    print(vars(page))  # get dictionary in current page.
+    print(vars(page.paginator))
     return render(
         request,
         "home/all_rooms.html",
         context={  # we can use it in html.
-            "rooms": rooms,
+            "page": page,
         },
     )
