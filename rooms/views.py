@@ -1,31 +1,19 @@
-from django.shortcuts import (
-    render,
-    redirect,
-)  # allows us to send response with html inside.
-from django.core.paginator import Paginator, EmptyPage
+from django.utils import timezone
+from django.views.generic import ListView
 from . import models
 
-# from django.http import HttpResponse
+# we don't need to programming like return render. Just configurate it with django.
+class HomeView(ListView):
 
-# view need to return the response
-def all_rooms(request):
-    # pagination.
-    page = int(request.GET.get("page", 1))
-    room_list = models.Room.objects.all()  # just only create the queryset.
-    # QuerySets are lazy – the act of creating a QuerySet doesn’t involve any database activity.
+    """HomeView Definition"""
 
-    paginator = Paginator(room_list, per_page=10, orphans=3)
+    model = models.Room
+    paginate_by = 10
+    paginate_orphans = 3
+    context_object_name = "rooms"  # object_list to rooms.
 
-    # With page() method, We can control and handle error as we want.
-    try:
-        page = paginator.page(page)  # return page object. (vs. get_page())
-        return render(
-            request,
-            "home/all_rooms.html",
-            context={  # we can use it in html.
-                "page": page,
-            },
-        )
-    except EmptyPage:
-        # page = paginator.page(1)
-        return redirect("/")
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        now = timezone.now()
+        context["now"] = now
+        return context
