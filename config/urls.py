@@ -23,6 +23,7 @@ from django.conf.urls.static import static  # static() : help to serve static fi
 # we need to 'divide and conquer' it in each app. folder.
 urlpatterns = [
     path("", include("core.urls", namespace="core")),
+    path("rooms/", include("rooms.urls", namespace="rooms")),
     path("admin/", admin.site.urls),
 ]
 

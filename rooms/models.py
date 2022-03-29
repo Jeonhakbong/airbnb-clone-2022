@@ -1,6 +1,5 @@
-from ast import arg
-from curses import savetty
 from django.db import models
+from django.urls import reverse
 from core import models as core_models
 from django_countries.fields import CountryField
 from users import models as users_models
@@ -83,12 +82,15 @@ class Room(core_models.TimeStampedModel):
     facilities = models.ManyToManyField(Facility, related_name="rooms", blank=True)
     house_rules = models.ManyToManyField(HouseRule, related_name="rooms", blank=True)
 
+    def __str__(self):
+        return self.name
+
     def save(self, *args, **kwargs):
         self.city = str.capitalize(self.city)
         super().save(*args, **kwargs)  # real save() method
 
-    def __str__(self):
-        return self.name
+    def get_absolute_url(self):
+        return reverse("rooms:detail", kwargs={"pk": self.pk})
 
     def total_rating(self):
         all_reviews = self.reviews.all()  # get review_set
