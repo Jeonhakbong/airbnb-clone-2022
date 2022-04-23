@@ -32,19 +32,21 @@ class RoomDetail(DetailView):
 
 
 def search(request):
-    city = str.capitalize(request.GET.get("city"))
-    sel_country = request.GET.get("country")
-    sel_room_type = int(request.GET.get("room_type", 0))
-    price = int(request.GET.get("price", 0))
-    guests = int(request.GET.get("guests", 0))
-    bedrooms = int(request.GET.get("bedrooms", 0))
-    beds = int(request.GET.get("beds", 0))
-    baths = int(request.GET.get("baths", 0))
-    instant = request.GET.get("instant", False)
-    superhost = request.GET.get("superhost", False)
+    DEFAULT_VALUE = 0
+
+    city = str.capitalize(request.GET.get("city", "Anywhere"))
+    sel_country = request.GET.get("country", "KR")
+    sel_room_type = int(request.GET.get("room_type", DEFAULT_VALUE))
+    price = int(request.GET.get("price", DEFAULT_VALUE))
+    guests = int(request.GET.get("guests", DEFAULT_VALUE))
+    bedrooms = int(request.GET.get("bedrooms", DEFAULT_VALUE))
+    beds = int(request.GET.get("beds", DEFAULT_VALUE))
+    baths = int(request.GET.get("baths", DEFAULT_VALUE))
+    instant = bool(request.GET.get("instant", False))
+    superhost = bool(request.GET.get("superhost", False))
     sel_amenities = request.GET.getlist("amenities")
     sel_facilities = request.GET.getlist("facilities")
-    print(instant, superhost)
+
     form = {
         "city": city,
         "sel_country": sel_country,
@@ -71,11 +73,57 @@ def search(request):
         "facilities": facilities,
     }
 
+    # use field lookups : how you specify the meat of an SQL WHERE clause.
+    filter_args = {}
+
+    if city != "Anywhere":
+        filter_args["city__startswith"] = city
+
+    if sel_room_type != DEFAULT_VALUE:
+        filter_args["room_type__pk__exact"] = sel_room_type
+
+    if price != DEFAULT_VALUE:
+        filter_args["price__lte"] = price
+
+    if guests != DEFAULT_VALUE:
+        filter_args["guests__gte"] = guests
+
+    if bedrooms != DEFAULT_VALUE:
+        filter_args["bedrooms__gte"] = bedrooms
+
+    if beds != DEFAULT_VALUE:
+        filter_args["beds__gte"] = beds
+
+    if baths != DEFAULT_VALUE:
+        filter_args["baths__gte"] = baths
+
+    if instant is True:
+        filter_args["instant_book"] = True
+
+    if superhost is True:
+        # superhost is not in room models. so we use foreign key.
+        filter_args["host__superhost"] = True
+
+    if len(sel_amenities) > 0:
+        for sel_amenity in sel_amenities:
+            filter_args["amenities__pk"] = int(sel_amenity)
+
+    if len(sel_facilities) > 0:
+        for sel_facility in sel_facilities:
+            filter_args["facilities__pk"] = int(sel_facility)
+
+    filter_args["country"] = sel_country
+    print(filter_args)
+
+    rooms = models.Room.objects.filter(**filter_args)
+    print(rooms)
+
     return render(
         request,
         "rooms/search.html",
         context={
             **form,
             **choices,
+            "rooms": rooms,
         },
     )
