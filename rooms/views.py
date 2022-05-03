@@ -1,11 +1,13 @@
-from cgi import print_exception
 from django.utils import timezone
-from django.views.generic import ListView, DetailView
+from django.views.generic import ListView, DetailView, View
 from django.shortcuts import render
-from django_countries import countries
-from . import models
+from django.core.paginator import Paginator
+from . import models, forms
 
-# we don't need to programming like return render. Just configurate it with django.
+# from django_countries import countries
+
+
+# we don't need to programming like return render. Just configurate it with django with CBV.
 
 
 class HomeView(ListView):
@@ -15,12 +17,13 @@ class HomeView(ListView):
     model = models.Room
     paginate_by = 10
     paginate_orphans = 3
-    context_object_name = "rooms"  # object_list to rooms.
+    context_object_name = "rooms"  # change 'object_list' to 'rooms'.
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         now = timezone.now()
         context["now"] = now
+
         return context
 
 
@@ -31,99 +34,93 @@ class RoomDetail(DetailView):
     model = models.Room
 
 
-def search(request):
-    DEFAULT_VALUE = 0
+class SearchView(View):
 
-    city = str.capitalize(request.GET.get("city", "Anywhere"))
-    sel_country = request.GET.get("country", "KR")
-    sel_room_type = int(request.GET.get("room_type", DEFAULT_VALUE))
-    price = int(request.GET.get("price", DEFAULT_VALUE))
-    guests = int(request.GET.get("guests", DEFAULT_VALUE))
-    bedrooms = int(request.GET.get("bedrooms", DEFAULT_VALUE))
-    beds = int(request.GET.get("beds", DEFAULT_VALUE))
-    baths = int(request.GET.get("baths", DEFAULT_VALUE))
-    instant = bool(request.GET.get("instant", False))
-    superhost = bool(request.GET.get("superhost", False))
-    sel_amenities = request.GET.getlist("amenities")
-    sel_facilities = request.GET.getlist("facilities")
+    """SearchView Definition"""
 
-    form = {
-        "city": city,
-        "sel_country": sel_country,
-        "sel_room_type": sel_room_type,
-        "price": price,
-        "guests": guests,
-        "bedrooms": bedrooms,
-        "beds": beds,
-        "baths": baths,
-        "instant": instant,
-        "superhost": superhost,
-        "sel_amenities": sel_amenities,
-        "sel_facilities": sel_facilities,
-    }
+    def get(self, request):
+        country = request.GET.get("country")
 
-    room_types = models.RoomType.objects.all()
-    amenities = models.Amenity.objects.all()
-    facilities = models.Facility.objects.all()
+        if country:
 
-    choices = {
-        "countries": countries,
-        "room_types": room_types,
-        "amenities": amenities,
-        "facilities": facilities,
-    }
+            form = forms.SearchForm(request.GET)  # bounded form.
 
-    # use field lookups : how you specify the meat of an SQL WHERE clause.
-    filter_args = {}
+            if form.is_valid():
+                city = form.cleaned_data.get("city")
+                country = form.cleaned_data.get("country")
+                room_type = form.cleaned_data.get("room_type")
+                price = form.cleaned_data.get("price")
+                guests = form.cleaned_data.get("guests")
+                bedrooms = form.cleaned_data.get("bedrooms")
+                beds = form.cleaned_data.get("beds")
+                baths = form.cleaned_data.get("baths")
+                instant_book = form.cleaned_data.get("instant_book")
+                superhost = form.cleaned_data.get("superhost")
+                amenities = form.cleaned_data.get("amenities")
+                facilities = form.cleaned_data.get("facilities")
 
-    if city != "Anywhere":
-        filter_args["city__startswith"] = city
+                # filtering.
+                filter_args = {}
 
-    if sel_room_type != DEFAULT_VALUE:
-        filter_args["room_type__pk__exact"] = sel_room_type
+                if city != "Anywhere":
+                    filter_args["city__startswith"] = city
 
-    if price != DEFAULT_VALUE:
-        filter_args["price__lte"] = price
+                if room_type is not None:
+                    filter_args["room_type"] = room_type
 
-    if guests != DEFAULT_VALUE:
-        filter_args["guests__gte"] = guests
+                if price is not None:
+                    filter_args["price__lte"] = price
 
-    if bedrooms != DEFAULT_VALUE:
-        filter_args["bedrooms__gte"] = bedrooms
+                if guests is not None:
+                    filter_args["guests__gte"] = guests
 
-    if beds != DEFAULT_VALUE:
-        filter_args["beds__gte"] = beds
+                if bedrooms is not None:
+                    filter_args["bedrooms__gte"] = bedrooms
 
-    if baths != DEFAULT_VALUE:
-        filter_args["baths__gte"] = baths
+                if beds is not None:
+                    filter_args["beds__gte"] = beds
 
-    if instant is True:
-        filter_args["instant_book"] = True
+                if baths is not None:
+                    filter_args["baths__gte"] = baths
 
-    if superhost is True:
-        # superhost is not in room models. so we use foreign key.
-        filter_args["host__superhost"] = True
+                if instant_book is True:
+                    filter_args["instant_book"] = True
 
-    if len(sel_amenities) > 0:
-        for sel_amenity in sel_amenities:
-            filter_args["amenities__pk"] = int(sel_amenity)
+                if superhost is True:
+                    # superhost is not in room models. so we use foreign key.
+                    filter_args["host__superhost"] = True
 
-    if len(sel_facilities) > 0:
-        for sel_facility in sel_facilities:
-            filter_args["facilities__pk"] = int(sel_facility)
+                for amenity in amenities:
+                    filter_args["amenities"] = amenity
 
-    filter_args["country"] = sel_country
-    print(filter_args)
+                for facility in facilities:
+                    filter_args["facilities"] = facility
 
-    rooms = models.Room.objects.filter(**filter_args)
-    print(rooms)
+                filter_args["country"] = country
 
-    return render(
-        request,
-        "rooms/search.html",
-        context={
-            **form,
-            **choices,
-            "rooms": rooms,
-        },
-    )
+                qs = models.Room.objects.filter(**filter_args)
+                paginator = Paginator(qs, 10, orphans=3)
+                page = request.GET.get("page", 1)
+
+                rooms = paginator.get_page(page)
+                # print(vars(rooms.paginator))
+                # print(dir(rooms.paginator))
+
+                return render(
+                    request,
+                    "rooms/search.html",
+                    context={
+                        "form": form,
+                        "rooms": rooms,
+                    },
+                )
+        else:
+            form = forms.SearchForm()  # unbounded form.
+
+        return render(
+            request,
+            "rooms/search.html",
+            context={
+                "form": form,
+            },
+        )
