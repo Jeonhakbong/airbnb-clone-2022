@@ -98,7 +98,8 @@ class SearchView(View):
 
                 filter_args["country"] = country
 
-                qs = models.Room.objects.filter(**filter_args)
+                # Paginator need ordered elements.
+                qs = models.Room.objects.filter(**filter_args).order_by("-created")
                 paginator = Paginator(qs, 10, orphans=3)
                 page = request.GET.get("page", 1)
 
